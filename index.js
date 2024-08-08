@@ -53,6 +53,28 @@ function GetPackageManagerSettings(repositories) {
   return xml
 }
 
+
+async function extractZip(file, dest) {
+  try {
+    // On Linux, this method assumes 'unzip' is available. This is not always the case
+    await tc.extractZip(file, dest).then(() => true)
+    return true;
+  }
+  catch {
+    // ignore
+  }
+
+  try {
+    // Fall back to powershell if unzip is not available. This is the case on e.g. 
+    // the official dotnet 8 SDK docker image, mcr.microsoft.com/dotnet/sdk:8.0 
+    await exec.exec("pwsh", ["-c", `Expand-Archive -Path "${file}" -DestinationPath "${dest}"`])
+    return true;
+  } catch {
+    // ignore
+  }
+  return false
+}
+
 async function main() {
   try {
     let platform = "linux";
@@ -92,7 +114,11 @@ async function main() {
     core.info("Unzipping OpenTAP: " + downloadedFilepath);
     const destDir = INSTALL_DIRS[platform];
     const settingsDir = destDir + "/Settings/";
-    await tc.extractZip(downloadedFilepath, destDir);
+    const extracted = await extractZip(downloadedFilepath, destDir);
+    if (!extracted) {
+      core.setFailed("Unable to extract zip archive.")
+      return;
+    }
 
     if (!fs.existsSync(settingsDir)) {
       fs.mkdirSync(settingsDir);
