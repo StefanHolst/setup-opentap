@@ -36,7 +36,7 @@ jobs:
           version: '9.17.0'    
 
   test-macos:
-    runs-on: macos-11
+    runs-on: macos-14
     name: Test MacOS
     steps:
       - name: Checkout
@@ -47,7 +47,7 @@ jobs:
           version: '9.17.0'
 
   test-macos-packages:
-    runs-on: macos-11
+    runs-on: macos-14
     name: Test MacOS (Packages)
     steps:
       - name: Checkout
